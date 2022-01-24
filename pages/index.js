@@ -38,10 +38,12 @@ function Titulo(props){
         <>
             <Tag>{props.children}</Tag>
             <style jsx>{`
+                @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
                 ${Tag} {
-                    color: ${appConfig.theme.colors.neutrals["500"]};
+                    color: ${appConfig.theme.colors.neutrals["200"]};
                     font-size: 24px;
                     font-weight: 600;
+                    font-family: 'MedievalSharp', cursive;
                 }
             `}</style>
         </>
@@ -54,11 +56,12 @@ export default function PaginaInicial() {
     return (
       <>
         <GlobalStyle />
+
         <Box
           styleSheet={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backgroundColor: appConfig.theme.colors.primary[500],
-            backgroundImage: 'url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)',
+            backgroundColor: appConfig.theme.colors.primary[200],
+            backgroundImage: 'url(https://wallpapers.com/images/high/various-dnd-rpg-dice-vutxn9bnfcj5hsm7.jpg)',
             backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundBlendMode: 'multiply',
           }}
         >
@@ -74,7 +77,8 @@ export default function PaginaInicial() {
               width: '100%', maxWidth: '700px',
               borderRadius: '5px', padding: '32px', margin: '16px',
               boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
-              backgroundColor: appConfig.theme.colors.neutrals[700],
+              backgroundColor: appConfig.theme.colors.neutrals[600],
+              opacity: .91,
             }}
           >
             {/* Formulário */}
@@ -85,8 +89,8 @@ export default function PaginaInicial() {
                 width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
               }}
             >
-              <Titulo tag="h2">Boas vindas de volta!</Titulo>
-              <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[300] }}>
+              <Titulo tag="h2">Ei! Vamos jogar?</Titulo>
+              <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[100] }}>
                 {appConfig.name}
               </Text>
   
@@ -136,6 +140,7 @@ export default function PaginaInicial() {
                 styleSheet={{
                   borderRadius: '50%',
                   marginBottom: '16px',
+                  opacity: 1,
                 }}
                 src={`https://github.com/${username}.png`}
               />

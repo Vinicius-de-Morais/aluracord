@@ -1,38 +1,11 @@
 import { Box, Button, Text, TextField, Image } from '@skynexui/components';
+import React from 'react';
+import { useRouter, useState} from 'next/router'
 import appConfig from "../config.json";
 // components
 
-function GlobalStyle() {
-    return (
-      <style global jsx>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-          list-style: none;
-        }
-        body {
-          font-family: 'Open Sans', sans-serif;
-        }
-        /* App fit Height */ 
-        html, body, #__next {
-          min-height: 100vh;
-          display: flex;
-          flex: 1;
-        }
-        #__next {
-          flex: 1;
-        }
-        #__next > * {
-          flex: 1;
-        }
-        /* ./App fit Height */ 
-      `}</style>
-    );
-}
 
 function Titulo(props){
-    console.log(props);
     const Tag = props.tag || "h1";
     return(
         <>
@@ -51,11 +24,32 @@ function Titulo(props){
 }
 
 export default function PaginaInicial() {
-    const username = 'Vinicius-de-Morais';
-  
+    // const username = 'Vinicius-de-Morais';]
+    // usando para mudar os valores com o React
+    const [username, setUsername] = React.useState('')
+    const roteamento = useRouter()
+    const [userFollowers, setUserFollowers] = React.useState('0')
+    const [userImage, setUserImage] = React.useState()
+    
+    function validation(evento){
+
+      const valor = evento.target.value
+      setUsername(valor);
+      fetch(`https://api.github.com/users/${valor}`)
+        .then(response => response.json())
+        .then(data => {
+          setUserFollowers(data.followers)
+        })
+
+      if(valor.length > 2){
+        setUserImage(`https://github.com/${valor}.png`)
+      }else{
+        setUserImage('https://color-hex.org/colors/182024.png')
+      }
+    }
+
     return (
       <>
-        <GlobalStyle />
 
         <Box
           styleSheet={{
@@ -84,6 +78,15 @@ export default function PaginaInicial() {
             {/* Formulário */}
             <Box
               as="form"
+              onSubmit={ function (evento){
+                evento.preventDefault();
+                console.log('Botão clicado')
+                
+                // via react
+                roteamento.push("/chat")
+                // modo tradicional do navegador
+                // window.location.href = "/chat"
+              }}
               styleSheet={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
@@ -95,6 +98,8 @@ export default function PaginaInicial() {
               </Text>
   
               <TextField
+                value={username}
+                onChange={validation}
                 fullWidth
                 textFieldColors={{
                   neutral: {
@@ -142,7 +147,7 @@ export default function PaginaInicial() {
                   marginBottom: '16px',
                   opacity: 1,
                 }}
-                src={`https://github.com/${username}.png`}
+                src={userImage}
               />
               <Text
                 variant="body4"
@@ -154,6 +159,8 @@ export default function PaginaInicial() {
                 }}
               >
                 {username}
+                <p>Seguidores: {userFollowers}</p>
+                
               </Text>
             </Box>
             {/* Photo Area */}

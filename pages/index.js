@@ -32,19 +32,20 @@ export default function PaginaInicial() {
     const [userImage, setUserImage] = React.useState()
     
     function validation(evento){
-
+      // local onde esta o valor
       const valor = evento.target.value
-      setUsername(valor);
-      fetch(`https://api.github.com/users/${valor}`)
-        .then(response => response.json())
-        .then(data => {
+      setUsername(valor); // não usei username como parâmetro pois ele não acompanha a entrada do user
+      
+      if(valor.length > 2){
+        fetch(`https://api.github.com/users/${valor}`)
+          .then(response => response.json())
+          .then(data => {
           setUserFollowers(data.followers)
         })
-
-      if(valor.length > 2){
         setUserImage(`https://github.com/${valor}.png`)
-      }else{
+      }else{ // aqui resetamos os valores
         setUserImage('https://color-hex.org/colors/182024.png')
+        setUserFollowers('')
       }
     }
 
@@ -98,6 +99,7 @@ export default function PaginaInicial() {
               </Text>
   
               <TextField
+                placeholder="Seu user no GitHub"
                 value={username}
                 onChange={validation}
                 fullWidth

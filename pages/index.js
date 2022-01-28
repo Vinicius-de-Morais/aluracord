@@ -1,6 +1,6 @@
 import { Box, Button, Text, TextField, Image } from '@skynexui/components';
 import React from 'react';
-import { useRouter, useState} from 'next/router'
+import { useRouter} from 'next/router'
 import appConfig from "../config.json";
 // components
 
@@ -38,10 +38,13 @@ export default function PaginaInicial() {
       
       if(valor.length > 2){
         fetch(`https://api.github.com/users/${valor}`)
-          .then(response => response.json())
-          .then(data => {
-          setUserFollowers(data.followers)
-        })
+          .then(async (response) =>{
+            const data =response.json()
+            return data
+          })
+          .then(data =>{
+            setUserFollowers(data.followers)
+          })
         setUserImage(`https://github.com/${valor}.png`)
       }else{ // aqui resetamos os valores
         setUserImage('https://color-hex.org/colors/182024.png')

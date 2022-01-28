@@ -1,31 +1,67 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import {createClient} from '@supabase/supabase-js'
+import {ShimmerCategoryList} from "react-shimmer-effects";
+import UserData from '../pages/components/userMenu.js'
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI5MzAyMywiZXhwIjoxOTU4ODY5MDIzfQ.yqpoADGrjzoikRMWxBA6yXgVRhwCDp4bL0Tf1F0D7pw'
+const SUPABASE_URL = 'https://iuzzbjhbofxnwztjrfon.supabase.co'
+const SUPABASE_CLIENT = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
 
 export default function ChatPage() {
-    // Sua lógica vai aqui
     // user digita e usa enter para enviar
     // adicionar o texto numa listagem
     const [userMessage, setUserMessage] = React.useState('')
     const [messageList, setMessageList] = React.useState([])
-    // Dev
-    // campo criado
-    // usar o onChange para enviar a mensagem e o useState {Temos q limpar a variavel apos enviar}
-    // Lista de mensagens
-    // 
+    
+    // variavel usada para o loading
+    const [done, setDone] = React.useState(false);
+
+
+    // fazendo as functions da supabase
+    function showMessages() {
+        console.log('.')
+            SUPABASE_CLIENT
+                .from('usersMessages')
+                .select('*')
+                .order('id', {ascending: false})
+                .then(({ data }) => {
+                    setMessageList(data)
+        })
+    }
+
+    React.useEffect(() => {
+        setTimeout( () => {
+            setDone(true)
+            showMessages()
+            
+        }, 2000)
+    
+    } , [])
+    
+    function addNewMessage(messageContent) {
+        SUPABASE_CLIENT
+            .from('usersMessages')
+            .insert(messageContent)
+            .then(({ data }) => {
+                setMessageList([
+                    data[0],
+                    ...messageList
+                ])
+            });
+    }
+
     function handleNewMessage(newMessage) {
         const messageContent = {
-            id: messageList.length + (Math.random() * 100),
             user: 'Vinicius-de-Morais',
             text: newMessage,
         }
-        setMessageList([
-            messageContent,
-            ...messageList
-        ]);
+        addNewMessage(messageContent)
         setUserMessage('');
     }
-    // ./Sua lógica vai aqui
+
     // se o evendo foi === a enter usa o enter se for o botao usa obotao
     function sendMessage(event){
         if( userMessage != ''){
@@ -36,6 +72,23 @@ export default function ChatPage() {
                 handleNewMessage(userMessage);
             }
         }
+    }
+
+    function handleDeleteMessage(messagesId) {
+
+        // aqui é onde filtramos as mensagem que vai ser apagadas
+        function choosedMessage(message) {
+            if (message.id == messagesId){
+                return message
+            }    
+        }
+        const filter = messageList.filter(choosedMessage)
+        console.log(filter[0].id)
+        SUPABASE_CLIENT
+            .from('usersMessages')
+            .delete()
+            .match({ id: filter[0].id })
+            .then(showMessages)
     }
 
     return (
@@ -75,9 +128,9 @@ export default function ChatPage() {
                         borderRadius: '5px',
                         padding: '16px',
                     }}
-                >
-
-                    <MessageList messages={messageList} set={setMessageList} />
+                >   { !done ?(<ShimmerCategoryList title items={3} categoryStyle="STYLE_FIVE" />)
+                    : (<MessageList messages={messageList} set={setMessageList} handleDeleteMessage={handleDeleteMessage} />)
+                    }
 
 
                     <Box
@@ -144,23 +197,15 @@ function Header() {
 }
 
 function MessageList(props) {
+    const messageList = props.messages
+    const setMessagesList = props.set
+    const handleDeleteMessage = props.handleDeleteMessage
     
-    function deleteMessage(messagesId) {
-        const messageList = props.messages
-        const setMessagesList = props.set
-        // console.log(messagesId)
-        // console.log(teste.id)
-        function choosedMessage(message) {
-            if (message.id != messagesId){
-                return message
-            }    
-        }
-        const filter = messageList.filter(choosedMessage)
-        setMessagesList([
-            ...filter,
-        ])
-        
-    }
+    // variavel para o mouse hover
+    const [mouseHover, setMouseHouver] = React.useState({
+        state : false,
+        id: -1
+    })
 
     return (
         <Box
@@ -175,7 +220,7 @@ function MessageList(props) {
             }}
         > 
 
-            {props.messages.map((messages) => {
+            {messageList.map((messages) => {
                 return (
                     <Text
                         key={messages.id}
@@ -196,14 +241,22 @@ function MessageList(props) {
                         >
                             <Image
                                 styleSheet={{
-                                    width: '20px',
-                                    height: '20px',
+                                    width: '60px',
+                                    height: '60px',
                                     borderRadius: '50%',
-                                    display: 'inline-block',
+                                    display: 'inline',
                                     marginRight: '8px',
                                 }}
                                 src={`https://github.com/${messages.user}.png`}
+                                onMouseEnter={() => {
+                                    setMouseHouver({state: true, id: messages.id})
+                                }}
+                                onMouseOut={() => {
+                                    setMouseHouver({state: false, id: -1})
+                                }}
                             />
+                            {mouseHover.state === true && mouseHover.id === messages.id ? (<UserData user={messages.user}/>)
+                            : ''}
                             <Text tag="strong">
                                 {messages.user}
                             </Text>
@@ -219,7 +272,7 @@ function MessageList(props) {
                             </Text>
                             <Button
                                 id={messages.id}
-                                onClick={() => deleteMessage(messages.id)}
+                                onClick={() => handleDeleteMessage(messages.id)}
                                 colorVariant="light"
                                 iconName="FaRegTrashAlt"
                                 rounded="none"

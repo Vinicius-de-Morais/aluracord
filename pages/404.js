@@ -31,7 +31,6 @@ export default function erro404() {
                         opacity: .91,
                     }}
                 >
-                    {/* Formulário */}
                     <Box
                         styleSheet={{
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

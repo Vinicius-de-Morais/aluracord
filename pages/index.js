@@ -24,7 +24,6 @@ function Titulo(props){
 }
 
 export default function PaginaInicial() {
-    // const username = 'Vinicius-de-Morais';]
     // usando para mudar os valores com o React
     const [username, setUsername] = React.useState('')
     const roteamento = useRouter()
@@ -87,7 +86,7 @@ export default function PaginaInicial() {
                 console.log('Botão clicado')
                 
                 // via react
-                roteamento.push("/chat")
+                roteamento.push(`/chat?username=${username}`)
                 // modo tradicional do navegador
                 // window.location.href = "/chat"
               }}

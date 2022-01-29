@@ -1,5 +1,7 @@
 import { Box, Text, Image, Icon } from '@skynexui/components';
 import React from 'react';
+import appConfig from '../../config.json';
+
 
 export default function UserData({user}) {
 
@@ -23,7 +25,7 @@ export default function UserData({user}) {
             display: 'flex',
             justifyContent: 'space-between',
             position: 'absolute',
-            backgroundColor: 'black',
+            backgroundColor: appConfig.theme.colors.neutrals[900],
             width: '300px',
             padding: '5px 5px',
             border: '1px solid #757575',

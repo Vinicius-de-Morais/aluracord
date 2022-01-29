@@ -1,42 +1,60 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
+import {useRouter} from 'next/router'
 import appConfig from '../config.json';
 import {createClient} from '@supabase/supabase-js'
 import {ShimmerCategoryList} from "react-shimmer-effects";
-import UserData from '../pages/components/userMenu.js'
+import UserData from '../src/components/userMenu.js';
+import {ButtonSendSticker} from '../src/components/ButtonSendSticker.js'
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI5MzAyMywiZXhwIjoxOTU4ODY5MDIzfQ.yqpoADGrjzoikRMWxBA6yXgVRhwCDp4bL0Tf1F0D7pw'
 const SUPABASE_URL = 'https://iuzzbjhbofxnwztjrfon.supabase.co'
 const SUPABASE_CLIENT = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+// fazendo as functions da supabase
+function listenMessageRT(setMessageList, mode='INSERT'){
+    return SUPABASE_CLIENT
+        .from('usersMessages')
+        .on(mode , (respostaLive) => {
+            setMessageList(respostaLive) 
+        })
+        .subscribe()
+}   
+
 
 export default function ChatPage() {
+
+    // definindo o user do chat pela URL
+    const roteamento = useRouter();
+    const loggedUser = roteamento.query.username;
     // user digita e usa enter para enviar
     // adicionar o texto numa listagem
-    const [userMessage, setUserMessage] = React.useState('')
-    const [messageList, setMessageList] = React.useState([])
+    const [userMessage, setUserMessage] = React.useState('');
+    const [messageList, setMessageList] = React.useState([]);
     
     // variavel usada para o loading
     const [done, setDone] = React.useState(false);
-
-
-    // fazendo as functions da supabase
+    
     function showMessages() {
-        console.log('.')
-            SUPABASE_CLIENT
-                .from('usersMessages')
-                .select('*')
-                .order('id', {ascending: false})
-                .then(({ data }) => {
-                    setMessageList(data)
-        })
+        SUPABASE_CLIENT
+            .from('usersMessages')
+            .select('*')
+            .order('id', {ascending: false})
+            .then(({ data }) => {
+                setMessageList(data);
+            });
     }
 
     React.useEffect(() => {
         setTimeout( () => {
             setDone(true)
             showMessages()
-            
+            listenMessageRT((nova) => {
+                setMessageList((actualMessageList) => {
+                    return [nova.new,
+                    ... actualMessageList]
+                })
+            })
         }, 2000)
     
     } , [])
@@ -46,16 +64,13 @@ export default function ChatPage() {
             .from('usersMessages')
             .insert(messageContent)
             .then(({ data }) => {
-                setMessageList([
-                    data[0],
-                    ...messageList
-                ])
+                console.log('data', data)
             });
     }
 
     function handleNewMessage(newMessage) {
         const messageContent = {
-            user: 'Vinicius-de-Morais',
+            user: loggedUser,
             text: newMessage,
         }
         addNewMessage(messageContent)
@@ -88,9 +103,17 @@ export default function ChatPage() {
             .from('usersMessages')
             .delete()
             .match({ id: filter[0].id })
-            .then(showMessages)
+            .then(listenMessageRT((old) => {
+                            console.log(old.old)
+                            setMessageList((actualMessageList) => {
+                                return [
+                                ...actualMessageList.filter((value) => value.id != old.old.id)]
+                            })
+                        }, 'DELETE'))       
+            
     }
 
+    
     return (
         <Box
             styleSheet={{
@@ -160,6 +183,12 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
                         />
+                        <ButtonSendSticker 
+                            onStickerClick={(stiker) => {
+                                handleNewMessage(':sticker: ' + stiker);
+                            }}
+                        />
+                        
                         <Button
                             onClick={sendMessage}
                             colorVariant="light"
@@ -168,7 +197,7 @@ export default function ChatPage() {
                             styleSheet={{
                                 padding: '6px 8px',
                                 marginRight: '12px',
-
+                                marginBottom: '10px'
                             }}
                         />
                     </Box>
@@ -285,7 +314,16 @@ function MessageList(props) {
                                 }}
                             />
                         </Box>
-                        {messages.text}
+
+                            
+                                {messages.text.startsWith(':sticker:')
+                                 ? (
+                                    <Image src={messages.text.replace(':sticker:', '')}/>
+                                 )
+                                 : (messages.text)
+                                }
+
+                            
                     </Text>
                 );
             })}

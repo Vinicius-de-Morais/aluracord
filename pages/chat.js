@@ -12,13 +12,18 @@ const SUPABASE_URL = 'https://iuzzbjhbofxnwztjrfon.supabase.co'
 const SUPABASE_CLIENT = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // fazendo as functions da supabase
-function listenMessageRT(setMessageList, mode='INSERT'){
-    return SUPABASE_CLIENT
+function listenMessageRT(setMessageList, deleteMessage, mode='INSERT'){
+    return (SUPABASE_CLIENT
         .from('usersMessages')
-        .on(mode , (respostaLive) => {
+        .on('DELETE', data => {
+            deleteMessage(data.old);
+        })
+        .on('INSERT' , (respostaLive) => {
             setMessageList(respostaLive) 
         })
         .subscribe()
+    )
+       
 }   
 
 
@@ -35,6 +40,22 @@ export default function ChatPage() {
     // variavel usada para o loading
     const [done, setDone] = React.useState(false);
     
+    const insertMessage = (nova) => {
+        setMessageList((actualMessageList) => {
+        return [nova.new,
+        ... actualMessageList]
+    })
+    
+    }
+    
+    const deleteMessage = (old) => {
+        console.log(old)
+        setMessageList((actualMessageList) => {
+            return [
+            ...actualMessageList.filter((value) => value.id != old.id)]
+        })
+    }
+
     function showMessages() {
         SUPABASE_CLIENT
             .from('usersMessages')
@@ -43,21 +64,19 @@ export default function ChatPage() {
             .then(({ data }) => {
                 setMessageList(data);
             });
+        
     }
 
     React.useEffect(() => {
         setTimeout( () => {
             setDone(true)
             showMessages()
-            listenMessageRT((nova) => {
-                setMessageList((actualMessageList) => {
-                    return [nova.new,
-                    ... actualMessageList]
-                })
-            })
         }, 2000)
-    
     } , [])
+    React.useEffect(() => {
+
+        listenMessageRT(insertMessage, deleteMessage)}
+    , [])
     
     function addNewMessage(messageContent) {
         SUPABASE_CLIENT
@@ -91,7 +110,7 @@ export default function ChatPage() {
 
     function handleDeleteMessage(messagesId) {
 
-        // aqui é onde filtramos as mensagem que vai ser apagadas
+        // aqui é onde filtramos a mensagem que vai ser apagada
         function choosedMessage(message) {
             if (message.id == messagesId){
                 return message
@@ -103,13 +122,7 @@ export default function ChatPage() {
             .from('usersMessages')
             .delete()
             .match({ id: filter[0].id })
-            .then(listenMessageRT((old) => {
-                            console.log(old.old)
-                            setMessageList((actualMessageList) => {
-                                return [
-                                ...actualMessageList.filter((value) => value.id != old.old.id)]
-                            })
-                        }, 'DELETE'))       
+            .then()     
             
     }
 
